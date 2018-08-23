@@ -9,10 +9,10 @@
 //     $ go get golang.org/dl/go1.10.1
 //     $ go1.10.1 download
 //
-// And then use the go1.10.1 command as if it were your normal
-// go command.
+// And then use the go1.10.1 command as if it were your normal go
+// command.
 //
-// See the release notes at https://golang.org/doc/devel/release.html#go1.10.minor
+// See the release notes at https://golang.org/doc/go1.10
 //
 // File bugs at https://golang.org/issues/new
 package main

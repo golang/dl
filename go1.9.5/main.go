@@ -9,10 +9,10 @@
 //     $ go get golang.org/dl/go1.9.5
 //     $ go1.9.5 download
 //
-// And then use the go1.9.5 command as if it were your normal
-// go command.
+// And then use the go1.9.5 command as if it were your normal go
+// command.
 //
-// See the release notes at https://golang.org/doc/devel/release.html#go1.9.minor
+// See the release notes at https://golang.org/doc/go1.9
 //
 // File bugs at https://golang.org/issues/new
 package main
