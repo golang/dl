@@ -73,13 +73,10 @@ func install(targetDir, version string) error {
 		return nil
 	}
 
-	goURL, err := versionArchiveURL(version)
-	if err != nil {
-		return err
-	}
 	if err := os.MkdirAll(targetDir, 0755); err != nil {
 		return err
 	}
+	goURL := versionArchiveURL(version)
 	res, err := http.Head(goURL)
 	if err != nil {
 		return err
@@ -372,7 +369,7 @@ func getOS() string {
 }
 
 // versionArchiveURL returns the zip or tar.gz URL of the given Go version.
-func versionArchiveURL(version string) (string, error) {
+func versionArchiveURL(version string) string {
 	goos := getOS()
 
 	// TODO: Maybe we should parse
@@ -387,7 +384,7 @@ func versionArchiveURL(version string) (string, error) {
 	if goos == "linux" && runtime.GOARCH == "arm" {
 		arch = "armv6l"
 	}
-	return "https://storage.googleapis.com/golang/" + version + "." + goos + "-" + arch + ext, nil
+	return "https://storage.googleapis.com/golang/" + version + "." + goos + "-" + arch + ext
 }
 
 const caseInsensitiveEnv = runtime.GOOS == "windows"
