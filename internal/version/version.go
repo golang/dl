@@ -57,7 +57,12 @@ func Run(version string) {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	cmd.Env = envutil.Dedup(caseInsensitiveEnv, append(os.Environ(), "GOROOT="+root))
+
+	newPath := filepath.Join(root, "bin")
+	if p := os.Getenv("PATH"); p != "" {
+		newPath += string(filepath.ListSeparator) + p
+	}
+	cmd.Env = envutil.Dedup(caseInsensitiveEnv, append(os.Environ(), "GOROOT="+root, "PATH="+newPath))
 	if err := cmd.Run(); err != nil {
 		// TODO: return the same exit status maybe.
 		os.Exit(1)
