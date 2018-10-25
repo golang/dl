@@ -62,6 +62,9 @@ func Run(version string) {
 	if p := os.Getenv("PATH"); p != "" {
 		newPath += string(filepath.ListSeparator) + p
 	}
+	// This envutil.Dedup call is unnecessary when the binary is
+	// built with Go 1.9+, but keep it around for now until Go 1.8
+	// is no longer seen in the wild in common distros.
 	cmd.Env = envutil.Dedup(caseInsensitiveEnv, append(os.Environ(), "GOROOT="+root, "PATH="+newPath))
 	if err := cmd.Run(); err != nil {
 		// TODO: return the same exit status maybe.
