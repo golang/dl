@@ -1,7 +1,7 @@
 # golang.org/dl
 
 This repository holds the Go wrapper programs that run specific versions of Go, such
-as `go get golang.org/dl/go1.10.3`.
+as `go get golang.org/dl/go1.10.3` and `go get golang.org/dl/gotip`.
 
 ## Report Issues / Send Patches
 
