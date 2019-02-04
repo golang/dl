@@ -12,7 +12,7 @@
 // And then use the go1.8.2 command as if it were your normal go
 // command.
 //
-// See the release notes at https://golang.org/doc/go1.8
+// See the release notes at https://golang.org/doc/devel/release.html#go1.8.minor
 //
 // File bugs at https://golang.org/issues/new
 package main

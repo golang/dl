@@ -69,10 +69,13 @@ func docHost(ver string) string {
 }
 
 func versionNoPatch(ver string) string {
-	rx := regexp.MustCompile(`^(go\d+\.\d+)($|rc|beta|\.)`)
+	rx := regexp.MustCompile(`^(go\d+\.\d+)($|[\.]?\d*)($|rc|beta|\.)`)
 	m := rx.FindStringSubmatch(ver)
-	if len(m) < 2 {
+	if m == nil {
 		failf("unrecognized version %q", ver)
+	}
+	if m[2] != "" {
+		return "devel/release.html#" + m[1] + ".minor"
 	}
 	return m[1]
 }
