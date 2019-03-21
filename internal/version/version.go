@@ -350,9 +350,17 @@ func (p *progressWriter) update() {
 	if p.n == p.total {
 		end = ""
 	}
-	fmt.Fprintf(os.Stderr, "Downloaded %0.1f%% (%d / %d bytes)%s\n",
+	fmt.Fprintf(os.Stderr, "Downloaded %5.1f%% (%*d / %d bytes)%s\n",
 		(100.0*float64(p.n))/float64(p.total),
-		p.n, p.total, end)
+		ndigits(p.total), p.n, p.total, end)
+}
+
+func ndigits(i int64) int {
+	var n int
+	for ; i != 0; i /= 10 {
+		n++
+	}
+	return n
 }
 
 func (p *progressWriter) Write(buf []byte) (n int, err error) {
