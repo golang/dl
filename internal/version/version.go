@@ -55,7 +55,6 @@ func Run(version string) {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-
 	newPath := filepath.Join(root, "bin")
 	if p := os.Getenv("PATH"); p != "" {
 		newPath += string(filepath.ListSeparator) + p

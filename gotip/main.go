@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"os/exec"
 	"os/user"
@@ -25,6 +26,10 @@ import (
 	"runtime"
 	"strings"
 )
+
+func init() {
+	http.DefaultTransport = &userAgentTransport{http.DefaultTransport}
+}
 
 func main() {
 	log.SetFlags(0)
@@ -51,6 +56,11 @@ func main() {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+	newPath := filepath.Join(root, "bin")
+	if p := os.Getenv("PATH"); p != "" {
+		newPath += string(filepath.ListSeparator) + p
+	}
+	cmd.Env = dedupEnv(caseInsensitiveEnv, append(os.Environ(), "GOROOT="+root, "PATH="+newPath))
 	if err := cmd.Run(); err != nil {
 		if _, ok := err.(*exec.ExitError); ok {
 			// TODO: return the same exit status maybe.
@@ -105,7 +115,7 @@ func installTip(root string) error {
 		return fmt.Errorf("failed to cleanup git repository: %v", err)
 	}
 
-	cmd := exec.Command(filepath.Join(root, "src", make()))
+	cmd := exec.Command(filepath.Join(root, "src", makeScript()))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Dir = filepath.Join(root, "src")
@@ -124,7 +134,7 @@ func installTip(root string) error {
 	return nil
 }
 
-func make() string {
+func makeScript() string {
 	switch runtime.GOOS {
 	case "plan9":
 		return "make.rc"
@@ -134,6 +144,8 @@ func make() string {
 		return "make.bash"
 	}
 }
+
+const caseInsensitiveEnv = runtime.GOOS == "windows"
 
 func exe() string {
 	if runtime.GOOS == "windows" {
@@ -172,4 +184,47 @@ func homedir() (string, error) {
 		}
 		return "", errors.New("can't find user home directory; $HOME is empty")
 	}
+}
+
+type userAgentTransport struct {
+	rt http.RoundTripper
+}
+
+func (uat userAgentTransport) RoundTrip(r *http.Request) (*http.Response, error) {
+	r.Header.Set("User-Agent", "golang-x-build-version/devel")
+	return uat.rt.RoundTrip(r)
+}
+
+// dedupEnv returns a copy of env with any duplicates removed, in favor of
+// later values.
+// Items are expected to be on the normal environment "key=value" form.
+// If caseInsensitive is true, the case of keys is ignored.
+//
+// This function is unnecessary when the binary is
+// built with Go 1.9+, but keep it around for now until Go 1.8
+// is no longer seen in the wild in common distros.
+//
+// This is copied verbatim from golang.org/x/build/envutil.Dedup at CL 10301
+// (commit a91ae26).
+func dedupEnv(caseInsensitive bool, env []string) []string {
+	out := make([]string, 0, len(env))
+	saw := map[string]int{} // to index in the array
+	for _, kv := range env {
+		eq := strings.Index(kv, "=")
+		if eq < 1 {
+			out = append(out, kv)
+			continue
+		}
+		k := kv[:eq]
+		if caseInsensitive {
+			k = strings.ToLower(k)
+		}
+		if dupIdx, isDup := saw[k]; isDup {
+			out[dupIdx] = kv
+		} else {
+			saw[k] = len(out)
+			out = append(out, kv)
+		}
+	}
+	return out
 }
