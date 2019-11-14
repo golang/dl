@@ -18,7 +18,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"os/exec"
 	"os/user"
@@ -26,10 +25,6 @@ import (
 	"runtime"
 	"strings"
 )
-
-func init() {
-	http.DefaultTransport = &userAgentTransport{http.DefaultTransport}
-}
 
 func main() {
 	log.SetFlags(0)
@@ -184,15 +179,6 @@ func homedir() (string, error) {
 		}
 		return "", errors.New("can't find user home directory; $HOME is empty")
 	}
-}
-
-type userAgentTransport struct {
-	rt http.RoundTripper
-}
-
-func (uat userAgentTransport) RoundTrip(r *http.Request) (*http.Response, error) {
-	r.Header.Set("User-Agent", "golang-x-build-version/devel")
-	return uat.rt.RoundTrip(r)
 }
 
 // dedupEnv returns a copy of env with any duplicates removed, in favor of
