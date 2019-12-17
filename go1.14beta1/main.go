@@ -12,7 +12,7 @@
 // And then use the go1.14beta1 command as if it were your normal go
 // command.
 //
-// See the release notes at https://golang.org/doc/go1.14beta1
+// See the release notes at https://tip.golang.org/doc/go1.14
 //
 // File bugs at https://golang.org/issues/new
 package main
