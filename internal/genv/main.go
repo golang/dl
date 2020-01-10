@@ -2,11 +2,15 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+// +build go1.13
+
 // The genv command generates version-specific go command source files.
 package main
 
 import (
 	"bytes"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"html/template"
 	"io/ioutil"
@@ -26,6 +30,10 @@ func usage() {
 func main() {
 	if len(os.Args) == 1 {
 		usage()
+	}
+	dlRoot, err := golangOrgDlRoot()
+	if err != nil {
+		failf("golangOrgDlRoot: %v", err)
 	}
 	for _, version := range os.Args[1:] {
 		if !strings.HasPrefix(version, "go") {
@@ -47,7 +55,7 @@ func main() {
 		}); err != nil {
 			failf("mainTmpl.execute: %v", err)
 		}
-		path := filepath.Join(os.Getenv("GOPATH"), "src/golang.org/dl", version, "main.go")
+		path := filepath.Join(dlRoot, version, "main.go")
 		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 			failf("%v", err)
 		}
@@ -113,3 +121,30 @@ func main() {
 	version.Run("{{.Version}}")
 }
 `))
+
+// golangOrgDlRoot determines the directory corresponding to the root
+// of module golang.org/dl by invoking 'go list -m' in module mode.
+// It must be called with a working directory that is contained
+// by the golang.org/dl module, otherwise it returns an error.
+func golangOrgDlRoot() (string, error) {
+	cmd := exec.Command("go", "list", "-m", "-json")
+	cmd.Env = append(os.Environ(), "GO111MODULE=on")
+	out, err := cmd.Output()
+	if ee := (*exec.ExitError)(nil); errors.As(err, &ee) {
+		return "", fmt.Errorf("go command exited unsuccessfully: %v\n%s", ee.ProcessState.String(), ee.Stderr)
+	} else if err != nil {
+		return "", err
+	}
+	var mod struct {
+		Path string // Module path.
+		Dir  string // Directory holding files for this module.
+	}
+	err = json.Unmarshal(out, &mod)
+	if err != nil {
+		return "", err
+	}
+	if mod.Path != "golang.org/dl" {
+		return "", fmt.Errorf("working directory must be in module golang.org/dl, but 'go list -m' reports it's currently in module %s", mod.Path)
+	}
+	return mod.Dir, nil
+}
