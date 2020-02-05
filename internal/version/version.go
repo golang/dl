@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"os/signal"
 	"os/user"
 	"path"
 	"path/filepath"
@@ -64,6 +65,9 @@ func runGo(root string) {
 		newPath += string(filepath.ListSeparator) + p
 	}
 	cmd.Env = dedupEnv(caseInsensitiveEnv, append(os.Environ(), "GOROOT="+root, "PATH="+newPath))
+
+	handleSignals()
+
 	if err := cmd.Run(); err != nil {
 		// TODO: return the same exit status maybe.
 		os.Exit(1)
@@ -499,4 +503,10 @@ func dedupEnv(caseInsensitive bool, env []string) []string {
 		}
 	}
 	return out
+}
+
+func handleSignals() {
+	// Ensure that signals intended for the child process are not handled by
+	// this process' runtime (e.g. SIGQUIT). See issue #36976.
+	signal.Notify(make(chan os.Signal), signalsToIgnore...)
 }
