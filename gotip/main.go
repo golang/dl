@@ -12,6 +12,7 @@
 // And then use the gotip command as if it were your normal go command.
 //
 // To update, run "gotip download" again.
+// To download a specific CL, run "gotip download NUMBER".
 package main
 
 import (
@@ -22,7 +23,9 @@ import (
 	"os/exec"
 	"os/user"
 	"path/filepath"
+	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 )
 
@@ -34,9 +37,21 @@ func main() {
 		log.Fatalf("gotip: %v", err)
 	}
 
-	if len(os.Args) == 2 && os.Args[1] == "download" {
-		if err := installTip(root); err != nil {
-			log.Fatalf("gotip: %v", err)
+	if os.Args[1] == "download" {
+		switch len(os.Args) {
+		case 2:
+			if err := installTip(root, ""); err != nil {
+				log.Fatalf("gotip: %v", err)
+			}
+		case 3:
+			if _, err := strconv.Atoi(os.Args[2]); err != nil {
+				log.Fatalf("gotip: invalid CL number: %q", os.Args[2])
+			}
+			if err := installTip(root, os.Args[2]); err != nil {
+				log.Fatalf("gotip: %v", err)
+			}
+		default:
+			log.Fatalf("gotip: usage: gotip download [CL number]")
 		}
 		log.Printf("Success. You may now run 'gotip'!")
 		os.Exit(0)
@@ -66,7 +81,7 @@ func main() {
 	os.Exit(0)
 }
 
-func installTip(root string) error {
+func installTip(root, clNumber string) error {
 	git := func(args ...string) error {
 		cmd := exec.Command("git", args...)
 		cmd.Stdin = os.Stdin
@@ -74,6 +89,11 @@ func installTip(root string) error {
 		cmd.Stderr = os.Stderr
 		cmd.Dir = root
 		return cmd.Run()
+	}
+	gitOutput := func(args ...string) ([]byte, error) {
+		cmd := exec.Command("git", args...)
+		cmd.Dir = root
+		return cmd.Output()
 	}
 
 	if _, err := os.Stat(filepath.Join(root, ".git")); err != nil {
@@ -83,9 +103,45 @@ func installTip(root string) error {
 		if err := git("clone", "--depth=1", "https://go.googlesource.com/go", root); err != nil {
 			return fmt.Errorf("failed to clone git repository: %v", err)
 		}
+	}
+
+	if clNumber != "" {
+		fmt.Fprintf(os.Stderr, "This will download and execute code from golang.org/cl/%s, continue? [y/n] ", clNumber)
+		var answer string
+		if fmt.Scanln(&answer); answer != "y" {
+			return fmt.Errorf("interrupted")
+		}
+
+		// ls-remote outputs a number of lines like:
+		// 2621ba2c60d05ec0b9ef37cd71e45047b004cead	refs/changes/37/227037/1
+		// 51f2af2be0878e1541d2769bd9d977a7e99db9ab	refs/changes/37/227037/2
+		// af1f3b008281c61c54a5d203ffb69334b7af007c	refs/changes/37/227037/3
+		// 6a10ebae05ce4b01cb93b73c47bef67c0f5c5f2a	refs/changes/37/227037/meta
+		refs, err := gitOutput("ls-remote")
+		if err != nil {
+			return fmt.Errorf("failed to list remotes: %v", err)
+		}
+		r := regexp.MustCompile(`refs/changes/\d\d/` + clNumber + `/(\d+)`)
+		match := r.FindAllStringSubmatch(string(refs), -1)
+		if match == nil {
+			return fmt.Errorf("CL %v not found", clNumber)
+		}
+		var ref string
+		var patchSet int
+		for _, m := range match {
+			ps, _ := strconv.Atoi(m[1])
+			if ps > patchSet {
+				patchSet = ps
+				ref = m[0]
+			}
+		}
+		log.Printf("Fetching CL %v, Patch Set %v...", clNumber, patchSet)
+		if err := git("fetch", "origin", ref); err != nil {
+			return fmt.Errorf("failed to fetch %s: %v", ref, err)
+		}
 	} else {
 		log.Printf("Updating the go development tree...")
-		if err := git("fetch", "origin"); err != nil {
+		if err := git("fetch", "origin", "master"); err != nil {
 			return fmt.Errorf("failed to fetch git repository updates: %v", err)
 		}
 	}
@@ -93,7 +149,7 @@ func installTip(root string) error {
 	// Use checkout and a detached HEAD, because it will refuse to overwrite
 	// local changes, and warn if commits are being left behind, but will not
 	// mind if master is force-pushed upstream.
-	if err := git("-c", "advice.detachedHead=false", "checkout", "origin/master"); err != nil {
+	if err := git("-c", "advice.detachedHead=false", "checkout", "FETCH_HEAD"); err != nil {
 		return fmt.Errorf("failed to checkout git repository: %v", err)
 	}
 	// It shouldn't be the case, but in practice sometimes binary artifacts
