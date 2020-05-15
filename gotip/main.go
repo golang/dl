@@ -37,7 +37,7 @@ func main() {
 		log.Fatalf("gotip: %v", err)
 	}
 
-	if os.Args[1] == "download" {
+	if len(os.Args) > 1 && os.Args[1] == "download" {
 		switch len(os.Args) {
 		case 2:
 			if err := installTip(root, ""); err != nil {
