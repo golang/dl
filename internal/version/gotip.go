@@ -32,14 +32,11 @@ func RunTip() {
 				log.Fatalf("gotip: %v", err)
 			}
 		case 3:
-			if _, err := strconv.Atoi(os.Args[2]); err != nil {
-				log.Fatalf("gotip: invalid CL number: %q", os.Args[2])
-			}
 			if err := installTip(root, os.Args[2]); err != nil {
 				log.Fatalf("gotip: %v", err)
 			}
 		default:
-			log.Fatalf("gotip: usage: gotip download [CL number]")
+			log.Fatalf("gotip: usage: gotip download [CL number | branch name]")
 		}
 		log.Printf("Success. You may now run 'gotip'!")
 		os.Exit(0)
@@ -53,7 +50,7 @@ func RunTip() {
 	runGo(root)
 }
 
-func installTip(root, clNumber string) error {
+func installTip(root, target string) error {
 	git := func(args ...string) error {
 		cmd := exec.Command("git", args...)
 		cmd.Stdin = os.Stdin
@@ -77,8 +74,10 @@ func installTip(root, clNumber string) error {
 		}
 	}
 
-	if clNumber != "" {
-		fmt.Fprintf(os.Stderr, "This will download and execute code from golang.org/cl/%s, continue? [y/n] ", clNumber)
+	// If the argument is a simple decimal number, consider it a CL number.
+	// Otherwise, consider it a branch name. If it's missing, fetch master.
+	if n, _ := strconv.Atoi(target); n >= 1 && strconv.Itoa(n) == target {
+		fmt.Fprintf(os.Stderr, "This will download and execute code from golang.org/cl/%s, continue? [y/n] ", target)
 		var answer string
 		if fmt.Scanln(&answer); answer != "y" {
 			return fmt.Errorf("interrupted")
@@ -93,10 +92,10 @@ func installTip(root, clNumber string) error {
 		if err != nil {
 			return fmt.Errorf("failed to list remotes: %v", err)
 		}
-		r := regexp.MustCompile(`refs/changes/\d\d/` + clNumber + `/(\d+)`)
+		r := regexp.MustCompile(`refs/changes/\d\d/` + target + `/(\d+)`)
 		match := r.FindAllStringSubmatch(string(refs), -1)
 		if match == nil {
-			return fmt.Errorf("CL %v not found", clNumber)
+			return fmt.Errorf("CL %v not found", target)
 		}
 		var ref string
 		var patchSet int
@@ -107,7 +106,13 @@ func installTip(root, clNumber string) error {
 				ref = m[0]
 			}
 		}
-		log.Printf("Fetching CL %v, Patch Set %v...", clNumber, patchSet)
+		log.Printf("Fetching CL %v, Patch Set %v...", target, patchSet)
+		if err := git("fetch", "origin", ref); err != nil {
+			return fmt.Errorf("failed to fetch %s: %v", ref, err)
+		}
+	} else if target != "" {
+		log.Printf("Fetching branch %v...", target)
+		ref := "refs/heads/" + target
 		if err := git("fetch", "origin", ref); err != nil {
 			return fmt.Errorf("failed to fetch %s: %v", ref, err)
 		}

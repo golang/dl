@@ -11,7 +11,8 @@
 //
 // And then use the gotip command as if it were your normal go command.
 //
-// To update, run "gotip download" again.
+// To update, run "gotip download" again. This will always download the main branch.
+// To download an alternative branch, run "gotip download BRANCH".
 // To download a specific CL, run "gotip download NUMBER".
 package main
 
