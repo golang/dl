@@ -50,6 +50,10 @@ func Run(version string) {
 		log.Fatalf("%s: not downloaded. Run '%s download' to install to %v", version, version, root)
 	}
 
+	runGo(root)
+}
+
+func runGo(root string) {
 	gobin := filepath.Join(root, "bin", "go"+exe())
 	cmd := exec.Command(gobin, os.Args[1:]...)
 	cmd.Stdin = os.Stdin
@@ -419,6 +423,10 @@ func goroot(version string) (string, error) {
 }
 
 func homedir() (string, error) {
+	// This could be replaced with os.UserHomeDir, but it was introduced too
+	// recently, and we want this to work with go as packaged by Linux
+	// distributions. Note that user.Current is not enough as it does not
+	// prioritize $HOME. See also Issue 26463.
 	switch getOS() {
 	case "plan9":
 		return "", fmt.Errorf("%q not yet supported", runtime.GOOS)
