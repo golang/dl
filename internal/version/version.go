@@ -68,8 +68,10 @@ func runGo(root string) {
 
 	handleSignals()
 
-	if err := cmd.Run(); err != nil {
-		// TODO: return the same exit status maybe.
+	err := cmd.Run()
+	if eerr, ok := err.(*exec.ExitError); ok {
+		os.Exit(eerr.ExitCode())
+	} else if err != nil {
 		os.Exit(1)
 	}
 	os.Exit(0)
