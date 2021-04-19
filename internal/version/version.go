@@ -390,10 +390,6 @@ func getOS() string {
 func versionArchiveURL(version string) string {
 	goos := getOS()
 
-	// TODO: Maybe we should parse
-	// https://storage.googleapis.com/go-builder-data/dl-index.txt ?
-	// Let's just guess the URL for now and see if it's there.
-	// Then we don't have to maintain that txt file too.
 	ext := ".tar.gz"
 	if goos == "windows" {
 		ext = ".zip"
@@ -402,7 +398,7 @@ func versionArchiveURL(version string) string {
 	if goos == "linux" && runtime.GOARCH == "arm" {
 		arch = "armv6l"
 	}
-	return "https://storage.googleapis.com/golang/" + version + "." + goos + "-" + arch + ext
+	return "https://dl.google.com/go/" + version + "." + goos + "-" + arch + ext
 }
 
 const caseInsensitiveEnv = runtime.GOOS == "windows"
