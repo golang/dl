@@ -23,6 +23,7 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -73,6 +74,28 @@ func runGo(root string) {
 		os.Exit(1)
 	}
 	os.Exit(0)
+}
+
+func fmtSize(size int64) string {
+	const (
+		byte_unit = 1 << (10 * iota)
+		kilobyte_unit
+		megabyte_unit
+	)
+
+	unit := "B"
+	value := float64(size)
+
+	switch {
+	case size >= megabyte_unit:
+		unit = "MB"
+		value = value / megabyte_unit
+	case size >= kilobyte_unit:
+		unit = "KB"
+		value = value / kilobyte_unit
+	}
+	formatted := strings.TrimSuffix(strconv.FormatFloat(value, 'f', 1, 64), ".0")
+	return fmt.Sprintf("%s %s", formatted, unit)
 }
 
 // install installs a version of Go to the named target directory, creating the
@@ -333,7 +356,7 @@ func copyFromURL(dstFile, srcURL string) (err error) {
 	if res.StatusCode != http.StatusOK {
 		return errors.New(res.Status)
 	}
-	pw := &progressWriter{w: f, total: res.ContentLength}
+	pw := &progressWriter{w: f, total: res.ContentLength, output: os.Stderr}
 	n, err := io.Copy(pw, res.Body)
 	if err != nil {
 		return err
@@ -346,10 +369,12 @@ func copyFromURL(dstFile, srcURL string) (err error) {
 }
 
 type progressWriter struct {
-	w     io.Writer
-	n     int64
-	total int64
-	last  time.Time
+	w         io.Writer
+	n         int64
+	total     int64
+	last      time.Time
+	formatted bool
+	output    io.Writer
 }
 
 func (p *progressWriter) update() {
@@ -357,9 +382,15 @@ func (p *progressWriter) update() {
 	if p.n == p.total {
 		end = ""
 	}
-	fmt.Fprintf(os.Stderr, "Downloaded %5.1f%% (%*d / %d bytes)%s\n",
-		(100.0*float64(p.n))/float64(p.total),
-		ndigits(p.total), p.n, p.total, end)
+	if p.formatted {
+		fmt.Fprintf(p.output, "Downloaded %5.1f%% (%s / %s)%s\n",
+			(100.0*float64(p.n))/float64(p.total),
+			fmtSize(p.n), fmtSize(p.total), end)
+	} else {
+		fmt.Fprintf(p.output, "Downloaded %5.1f%% (%*d / %d bytes)%s\n",
+			(100.0*float64(p.n))/float64(p.total),
+			ndigits(p.total), p.n, p.total, end)
+	}
 }
 
 func ndigits(i int64) int {
