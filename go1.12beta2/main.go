@@ -6,7 +6,7 @@
 //
 // To install, run:
 //
-//     $ go get golang.org/dl/go1.12beta2
+//     $ go install golang.org/dl/go1.12beta2@latest
 //     $ go1.12beta2 download
 //
 // And then use the go1.12beta2 command as if it were your normal go

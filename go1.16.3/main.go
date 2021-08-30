@@ -6,7 +6,7 @@
 //
 // To install, run:
 //
-//     $ go get golang.org/dl/go1.16.3
+//     $ go install golang.org/dl/go1.16.3@latest
 //     $ go1.16.3 download
 //
 // And then use the go1.16.3 command as if it were your normal go

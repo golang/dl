@@ -105,7 +105,7 @@ var mainTmpl = template.Must(template.New("main").Parse(`// Copyright {{.Year}} 
 //
 // To install, run:
 //
-//     $ go get golang.org/dl/{{.Version}}
+//     $ go install golang.org/dl/{{.Version}}@latest
 //     $ {{.Version}} download
 //
 // And then use the {{.Version}} command as if it were your normal go

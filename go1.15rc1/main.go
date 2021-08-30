@@ -6,7 +6,7 @@
 //
 // To install, run:
 //
-//     $ go get golang.org/dl/go1.15rc1
+//     $ go install golang.org/dl/go1.15rc1@latest
 //     $ go1.15rc1 download
 //
 // And then use the go1.15rc1 command as if it were your normal go

@@ -6,7 +6,7 @@
 //
 // To install, run:
 //
-//     $ go get golang.org/dl/go1.8beta1
+//     $ go install golang.org/dl/go1.8beta1@latest
 //     $ go1.8beta1 download
 //
 // And then use the go1.8beta1 command as if it were your normal go

@@ -6,7 +6,7 @@
 //
 // To install, run:
 //
-//     $ go get golang.org/dl/go1.9.4
+//     $ go install golang.org/dl/go1.9.4@latest
 //     $ go1.9.4 download
 //
 // And then use the go1.9.4 command as if it were your normal go
