@@ -57,11 +57,13 @@ func installTip(root, target string) error {
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		cmd.Dir = root
+		cmd.Env = dedupEnv(caseInsensitiveEnv, append(os.Environ(), "PWD="+cmd.Dir))
 		return cmd.Run()
 	}
 	gitOutput := func(args ...string) ([]byte, error) {
 		cmd := exec.Command("git", args...)
 		cmd.Dir = root
+		cmd.Env = dedupEnv(caseInsensitiveEnv, append(os.Environ(), "PWD="+cmd.Dir))
 		return cmd.Output()
 	}
 
@@ -154,7 +156,11 @@ func installTip(root, target string) error {
 			return fmt.Errorf("failed to detect an existing go installation for bootstrap: %v", err)
 		}
 		cmd.Env = append(os.Environ(), "GOROOT_BOOTSTRAP="+strings.TrimSpace(string(goroot)))
+	} else {
+		cmd.Env = os.Environ()
 	}
+	cmd.Env = dedupEnv(caseInsensitiveEnv, append(cmd.Env, "PWD="+cmd.Dir))
+
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to build go: %v", err)
 	}
