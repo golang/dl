@@ -47,7 +47,7 @@ func TestFormatted(t *testing.T) {
 		total *= 1024
 		expected := fmt.Sprintf("%d %s", 1, units[i-1])
 		if !strings.Contains(buff.String(), expected) {
-			t.Errorf("expected: %s recieved: %s", expected, buff.String())
+			t.Errorf("expected: %s received: %s", expected, buff.String())
 		}
 	}
 }
@@ -60,7 +60,7 @@ func TestUnFormatted(t *testing.T) {
 		pw.update()
 		expected := fmt.Sprintf("%d bytes", total)
 		if !strings.Contains(buff.String(), expected) {
-			t.Errorf("expected: %s recieved: %s", expected, buff.String())
+			t.Errorf("expected: %s received: %s", expected, buff.String())
 		}
 		total *= 1024
 	}
