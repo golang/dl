@@ -11,6 +11,7 @@ import (
 	"compress/gzip"
 	"crypto/sha256"
 	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -41,8 +42,12 @@ func Run(version string) {
 		log.Fatalf("%s: %v", version, err)
 	}
 
-	if len(os.Args) == 2 && os.Args[1] == "download" {
-		if err := install(root, version); err != nil {
+	if len(os.Args) >= 2 && os.Args[1] == "download" {
+		flagset := flag.NewFlagSet("download", flag.ExitOnError)
+		mirror := flagset.String("m", "google", "download mirror: ['google','ustc]")
+		flagset.Parse(os.Args[2:])
+
+		if err := install(root, version, *mirror); err != nil {
 			log.Fatalf("%s: download failed: %v", version, err)
 		}
 		os.Exit(0)
@@ -100,7 +105,7 @@ func fmtSize(size int64) string {
 
 // install installs a version of Go to the named target directory, creating the
 // directory as needed.
-func install(targetDir, version string) error {
+func install(targetDir, version, mirror string) error {
 	if _, err := os.Stat(filepath.Join(targetDir, unpackedOkay)); err == nil {
 		log.Printf("%s: already downloaded in %v", version, targetDir)
 		return nil
@@ -109,7 +114,8 @@ func install(targetDir, version string) error {
 	if err := os.MkdirAll(targetDir, 0755); err != nil {
 		return err
 	}
-	goURL := versionArchiveURL(version)
+	goURL := versionArchiveURL(version, mirror)
+	fmt.Printf("download from %s\n", goURL)
 	res, err := http.Head(goURL)
 	if err != nil {
 		return err
@@ -417,8 +423,20 @@ func getOS() string {
 	return runtime.GOOS
 }
 
+// getMirrors return the download url by mirror
+func getMirrors(mirror string) string {
+	switch mirror {
+	case "ustc":
+		return "https://mirrors.ustc.edu.cn/golang/"
+	case "google":
+		fallthrough
+	default:
+		return "https://dl.google.com/go/"
+	}
+}
+
 // versionArchiveURL returns the zip or tar.gz URL of the given Go version.
-func versionArchiveURL(version string) string {
+func versionArchiveURL(version, mirror string) string {
 	goos := getOS()
 
 	ext := ".tar.gz"
@@ -429,7 +447,7 @@ func versionArchiveURL(version string) string {
 	if goos == "linux" && runtime.GOARCH == "arm" {
 		arch = "armv6l"
 	}
-	return "https://dl.google.com/go/" + version + "." + goos + "-" + arch + ext
+	return getMirrors(mirror) + version + "." + goos + "-" + arch + ext
 }
 
 const caseInsensitiveEnv = runtime.GOOS == "windows"
