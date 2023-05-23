@@ -13,7 +13,6 @@ import (
 	"regexp"
 	"runtime"
 	"strconv"
-	"strings"
 )
 
 // RunTip runs the "go" tool from the development tree.
@@ -149,17 +148,7 @@ func installTip(root, target string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Dir = filepath.Join(root, "src")
-	if runtime.GOOS == "windows" {
-		// Workaround make.bat not autodetecting GOROOT_BOOTSTRAP. Issue 28641.
-		goroot, err := exec.Command("go", "env", "GOROOT").Output()
-		if err != nil {
-			return fmt.Errorf("failed to detect an existing go installation for bootstrap: %v", err)
-		}
-		cmd.Env = append(os.Environ(), "GOROOT_BOOTSTRAP="+strings.TrimSpace(string(goroot)))
-	} else {
-		cmd.Env = os.Environ()
-	}
-	cmd.Env = dedupEnv(caseInsensitiveEnv, append(cmd.Env, "PWD="+cmd.Dir))
+	cmd.Env = dedupEnv(caseInsensitiveEnv, append(os.Environ(), "PWD="+cmd.Dir))
 
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to build go: %v", err)
