@@ -148,7 +148,13 @@ func installTip(root, target string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Dir = filepath.Join(root, "src")
-	cmd.Env = dedupEnv(caseInsensitiveEnv, append(os.Environ(), "PWD="+cmd.Dir))
+	// Add new GOROOT/bin to PATH to silence path warning at end of make.bash.
+	// Add PWD to environment to fix future calls to os.Getwd.
+	newPath := filepath.Join(root, "bin")
+	if p := os.Getenv("PATH"); p != "" {
+		newPath += string(filepath.ListSeparator) + p
+	}
+	cmd.Env = dedupEnv(caseInsensitiveEnv, append(os.Environ(), "PATH="+newPath, "PWD="+cmd.Dir))
 
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to build go: %v", err)
