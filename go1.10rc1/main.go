@@ -6,8 +6,8 @@
 //
 // To install, run:
 //
-//     $ go install golang.org/dl/go1.10rc1@latest
-//     $ go1.10rc1 download
+//	$ go install golang.org/dl/go1.10rc1@latest
+//	$ go1.10rc1 download
 //
 // And then use the go1.10rc1 command as if it were your normal go
 // command.

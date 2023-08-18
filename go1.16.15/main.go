@@ -6,8 +6,8 @@
 //
 // To install, run:
 //
-//     $ go install golang.org/dl/go1.16.15@latest
-//     $ go1.16.15 download
+//	$ go install golang.org/dl/go1.16.15@latest
+//	$ go1.16.15 download
 //
 // And then use the go1.16.15 command as if it were your normal go
 // command.

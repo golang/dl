@@ -6,8 +6,8 @@
 //
 // To install, run:
 //
-//     $ go install golang.org/dl/go1.11.5@latest
-//     $ go1.11.5 download
+//	$ go install golang.org/dl/go1.11.5@latest
+//	$ go1.11.5 download
 //
 // And then use the go1.11.5 command as if it were your normal go
 // command.

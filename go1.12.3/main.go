@@ -6,8 +6,8 @@
 //
 // To install, run:
 //
-//     $ go install golang.org/dl/go1.12.3@latest
-//     $ go1.12.3 download
+//	$ go install golang.org/dl/go1.12.3@latest
+//	$ go1.12.3 download
 //
 // And then use the go1.12.3 command as if it were your normal go
 // command.

@@ -6,8 +6,8 @@
 //
 // To install, run:
 //
-//     $ go install golang.org/dl/go1.8.2@latest
-//     $ go1.8.2 download
+//	$ go install golang.org/dl/go1.8.2@latest
+//	$ go1.8.2 download
 //
 // And then use the go1.8.2 command as if it were your normal go
 // command.
