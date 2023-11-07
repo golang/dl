@@ -3,7 +3,6 @@
 // license that can be found in the LICENSE file.
 
 //go:build go1.13
-// +build go1.13
 
 // The genv command generates version-specific go command source files.
 package main
@@ -14,7 +13,6 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -60,8 +58,8 @@ func main() {
 		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 			failf("%v", err)
 		}
-		if err := ioutil.WriteFile(path, buf.Bytes(), 0666); err != nil {
-			failf("ioutil.WriteFile: %v", err)
+		if err := os.WriteFile(path, buf.Bytes(), 0666); err != nil {
+			failf("os.WriteFile: %v", err)
 		}
 		fmt.Println("Wrote", path)
 		if err := exec.Command("gofmt", "-w", path).Run(); err != nil {
@@ -89,7 +87,7 @@ func versionNoPatch(ver string) string {
 	return m[1]
 }
 
-func failf(format string, args ...interface{}) {
+func failf(format string, args ...any) {
 	if len(format) == 0 || format[len(format)-1] != '\n' {
 		format += "\n"
 	}

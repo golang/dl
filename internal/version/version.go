@@ -13,7 +13,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -149,7 +148,7 @@ func install(targetDir, version string) error {
 	if err := unpackArchive(targetDir, archiveFile); err != nil {
 		return fmt.Errorf("extracting archive %v: %v", archiveFile, err)
 	}
-	if err := ioutil.WriteFile(filepath.Join(targetDir, unpackedOkay), nil, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(targetDir, unpackedOkay), nil, 0644); err != nil {
 		return err
 	}
 	log.Printf("Success. You may now run '%v'", version)
@@ -320,7 +319,7 @@ func slurpURLToString(url_ string) (string, error) {
 	if res.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("%s: %v", url_, res.Status)
 	}
-	slurp, err := ioutil.ReadAll(res.Body)
+	slurp, err := io.ReadAll(res.Body)
 	if err != nil {
 		return "", fmt.Errorf("reading %s: %v", url_, err)
 	}
