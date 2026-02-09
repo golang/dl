@@ -51,9 +51,18 @@ func Run(version string) {
 		log.Fatalf("%s: not downloaded. Run '%s download' to install to %v", version, version, root)
 	}
 
+	// Note: Do not forcibly change GOTOOLCHAIN here, because we want to behave
+	// exactly like go1.X.Y would, and the real Go 1.X.Y would respect the
+	// user's own GOTOOLCHAIN setting, including updating to a newer Go when
+	// necessary.
 	runGo(root, "")
 }
 
+// runGo runs the "go" tool of the Go toolchain whose
+// GOROOT is provided in root. gotoolchain optionally
+// controls the GOTOOLCHAIN environment variable; the
+// empty string means to use any existing GOTOOLCHAIN
+// setting available in the environment as is.
 func runGo(root, gotoolchain string) {
 	gobin := filepath.Join(root, "bin", "go"+exe())
 	cmd := exec.Command(gobin, os.Args[1:]...)
@@ -73,7 +82,14 @@ func runGo(root, gotoolchain string) {
 	os.Exit(0)
 }
 
+// computeEnv computes the environment of the process in runGo.
+// It's factored out of runGo so that TestComputeEnv can test it.
 func computeEnv(root, gotoolchain string, baseEnv []string) []string {
+	// Put this version's GOROOT/bin first in PATH, so that programs executed
+	// by cmd/go commands like "test", "generate", and "run" can find the same
+	// "go" binary as the one that invoked them. This works around the fact that
+	// some older versions of the go command didn't handle that on their own
+	// (see go.dev/issue/57050 and go.dev/issue/68005).
 	newPath := filepath.Join(root, "bin")
 	if p := os.Getenv("PATH"); p != "" {
 		newPath += string(filepath.ListSeparator) + p
