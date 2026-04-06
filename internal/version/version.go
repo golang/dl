@@ -51,20 +51,16 @@ func Run(version string) {
 		log.Fatalf("%s: not downloaded. Run '%s download' to install to %v", version, version, root)
 	}
 
-	runGo(root)
+	runGo(root, "")
 }
 
-func runGo(root string) {
+func runGo(root, gotoolchain string) {
 	gobin := filepath.Join(root, "bin", "go"+exe())
 	cmd := exec.Command(gobin, os.Args[1:]...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	newPath := filepath.Join(root, "bin")
-	if p := os.Getenv("PATH"); p != "" {
-		newPath += string(filepath.ListSeparator) + p
-	}
-	cmd.Env = dedupEnv(caseInsensitiveEnv, append(os.Environ(), "GOROOT="+root, "PATH="+newPath))
+	cmd.Env = computeEnv(root, gotoolchain, os.Environ())
 
 	handleSignals()
 
@@ -75,6 +71,18 @@ func runGo(root string) {
 		os.Exit(1)
 	}
 	os.Exit(0)
+}
+
+func computeEnv(root, gotoolchain string, baseEnv []string) []string {
+	newPath := filepath.Join(root, "bin")
+	if p := os.Getenv("PATH"); p != "" {
+		newPath += string(filepath.ListSeparator) + p
+	}
+	env := append(baseEnv, "GOROOT="+root, "PATH="+newPath)
+	if gotoolchain != "" {
+		env = append(env, "GOTOOLCHAIN="+gotoolchain)
+	}
+	return dedupEnv(caseInsensitiveEnv, env)
 }
 
 func fmtSize(size int64) string {

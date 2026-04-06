@@ -14,6 +14,10 @@
 // To update, run "gotip download" again. This will always download the main branch.
 // To download an alternative branch, run "gotip download BRANCH".
 // To download a specific CL, run "gotip download NUMBER".
+//
+// By default, gotip force sets GOTOOLCHAIN=auto to avoid the GOTOOLCHAIN value
+// from go env -w interfere. Users can override this behavior by setting
+// GOTOOLCHAIN in their environment var setting.
 package main
 
 import (

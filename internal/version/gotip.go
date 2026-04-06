@@ -16,6 +16,8 @@ import (
 )
 
 // RunTip runs the "go" tool from the development tree.
+// It force sets GOTOOLCHAIN=auto to avoid the GOTOOLCHAIN value from go env -w interfere.
+// Users can override this behavior by setting GOTOOLCHAIN in their environment var setting.
 func RunTip() {
 	log.SetFlags(0)
 
@@ -46,7 +48,11 @@ func RunTip() {
 		log.Fatalf("gotip: not downloaded. Run 'gotip download' to install to %v", root)
 	}
 
-	runGo(root)
+	gotoolchain := ""
+	if _, ok := os.LookupEnv("GOTOOLCHAIN"); !ok {
+		gotoolchain = "auto"
+	}
+	runGo(root, gotoolchain)
 }
 
 func installTip(root, target string) error {

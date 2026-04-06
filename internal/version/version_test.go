@@ -65,3 +65,57 @@ func TestUnFormatted(t *testing.T) {
 		total *= 1024
 	}
 }
+
+func TestComputeEnv(t *testing.T) {
+	tests := []struct {
+		name        string
+		baseEnv     []string
+		gotoolchain string
+		wantContain string
+		wantAbsent  string
+	}{
+		{
+			name:        "not set, should use default",
+			baseEnv:     []string{},
+			gotoolchain: "auto",
+			wantContain: "GOTOOLCHAIN=auto",
+		},
+		{
+			name:        "already set, should override",
+			baseEnv:     []string{"GOTOOLCHAIN=user-value"},
+			gotoolchain: "auto",
+			wantContain: "GOTOOLCHAIN=auto",
+			wantAbsent:  "GOTOOLCHAIN=user-value",
+		},
+		{
+			name:        "gotoolchain empty, should not add",
+			baseEnv:     []string{},
+			gotoolchain: "",
+			wantAbsent:  "GOTOOLCHAIN=",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			env := computeEnv("/tmp/goroot", tt.gotoolchain, tt.baseEnv)
+
+			foundContain := false
+			foundAbsent := false
+			for _, e := range env {
+				if tt.wantContain != "" && e == tt.wantContain {
+					foundContain = true
+				}
+				if tt.wantAbsent != "" && e == tt.wantAbsent {
+					foundAbsent = true
+				}
+			}
+
+			if tt.wantContain != "" && !foundContain {
+				t.Errorf("expected env to contain %q, but it didn't. Env: %v", tt.wantContain, env)
+			}
+			if tt.wantAbsent != "" && foundAbsent {
+				t.Errorf("expected env to NOT contain %q, but it did. Env: %v", tt.wantAbsent, env)
+			}
+		})
+	}
+}
